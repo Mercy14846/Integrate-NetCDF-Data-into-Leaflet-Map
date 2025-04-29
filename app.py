@@ -29,7 +29,7 @@ def get_weather_layer():
             # Extract data (adjust dimensions based on your NC file structure)
             data = ds[variable][time_idx, :, :]
             
-            # Normalize and apply colourmap
+            # Normalize and apply colormap
             norm_data = ((data - np.nanmin(data)) / (np.nanmax(data) - np.nanmin(data)) * 255).astype(np.uint8)
             cmap = plt.cm.get_cmap('viridis')
             colored_data = (cmap(norm_data / 255.0)[:, :, :3] * 255).astype(np.uint8)
