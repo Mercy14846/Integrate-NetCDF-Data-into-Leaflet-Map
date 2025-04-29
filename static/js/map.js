@@ -1,4 +1,4 @@
-// Map initialization
+// Initialize map
 const map = L.map('map').setView([0, 20], 3);
 
 // Base layers
@@ -14,78 +14,90 @@ const baseLayers = {
     })
 };
 
-// Weather layer configuration
-const weatherLayers = {
-    "Temperature": { var: 'temperature', bounds: [[-35, -20], [37, 50]] },
-    "Pressure": { var: 'pressure', bounds: [[-35, -20], [37, 50]] }
-};
-
-// Layer groups
-const overlayLayers = {
-    "Weather Stations": L.layerGroup(),
-    "Country Boundaries": L.layerGroup()
-};
-
-// Initialize layer control
-L.control.layers(baseLayers, overlayLayers).addTo(map);
-
-// Weather layer management
-let activeWeatherLayer = null;
-
-async function loadWeatherLayer(layerName) {
-    if (activeWeatherLayer) {
-        map.removeLayer(activeWeatherLayer);
-    }
-
-    const layerConfig = weatherLayers[layerName];
-    const timeResponse = await fetch(`http://localhost:5000/time-steps?var=${layerConfig.var}`);
-    const timeData = await timeResponse.json();
-
-    createTimeControl(timeData.times.length);
+// Weather layer manager
+const weatherLayerManager = {
+    currentLayer: null,
+    currentVar: null,
     
-    activeWeatherLayer = L.imageOverlay(
-        `http://localhost:5000/weather-layer?var=${layerConfig.var}&time=0`,
-        layerConfig.bounds
-    ).addTo(map);
-}
+    layers: {
+        "Temperature": { var: 'temperature', bounds: [[-35, -20], [37, 50]] },
+        "Pressure": { var: 'pressure', bounds: [[-35, -20], [37, 50]] }
+    },
 
-// Time control
-function createTimeControl(maxTime) {
-    let timeControl = document.getElementById('time-control');
-    if (!timeControl) {
-        timeControl = L.control({ position: 'bottomleft' });
-        timeControl.onAdd = () => {
-            const div = L.DomUtil.create('div', 'time-control');
-            div.innerHTML = `
-                <input type="range" min="0" max="${maxTime}" value="0" class="time-slider">
-                <span class="time-display">Time Index: 0</span>
-            `;
-            return div;
-        };
-        timeControl.addTo(map);
+    async loadLayer(name) {
+        if (this.currentLayer) {
+            map.removeLayer(this.currentLayer);
+        }
+
+        const config = this.layers[name];
+        const response = await fetch(`/time-steps?var=${config.var}`);
+        
+        if (!response.ok) {
+            console.error('Failed to load time steps:', await response.text());
+            return;
+        }
+
+        const timeData = await response.json();
+        this.createTimeControl(timeData.times.length);
+        
+        this.currentLayer = L.imageOverlay(
+            `/weather-layer?var=${config.var}&time=0`,
+            config.bounds,
+            { var: config.var }
+        ).addTo(map);
+        
+        this.currentVar = config.var;
+    },
+
+    createTimeControl(maxTime) {
+        let control = document.querySelector('.leaflet-control-time');
+        
+        if (!control) {
+            control = L.control({ position: 'bottomleft' });
+            control.onAdd = () => {
+                const div = L.DomUtil.create('div', 'leaflet-control-time');
+                div.innerHTML = `
+                    <input type="range" min="0" max="${maxTime}" value="0" 
+                           class="time-slider">
+                    <span class="time-display">Time Index: 0</span>
+                `;
+                return div;
+            };
+            control.addTo(map);
+        }
+
+        document.querySelector('.time-slider').addEventListener('input', (e) => {
+            const timeIdx = e.target.value;
+            document.querySelector('.time-display').textContent = `Time Index: ${timeIdx}`;
+            this.currentLayer.setUrl(
+                `/weather-layer?var=${this.currentVar}&time=${timeIdx}`
+            );
+        });
     }
+};
 
-    document.querySelector('.time-slider').addEventListener('input', (e) => {
-        const timeIdx = e.target.value;
-        document.querySelector('.time-display').textContent = `Time Index: ${timeIdx}`;
-        activeWeatherLayer.setUrl(
-            `http://localhost:5000/weather-layer?var=${activeWeatherLayer.options.var}&time=${timeIdx}`
-        );
-    });
-}
+// Layer control
+L.control.layers(baseLayers, {}, {
+    collapsed: false
+}).addTo(map);
 
-// Layer change handler
+// Handle layer changes
 map.on('baselayerchange', (e) => {
-    if (weatherLayers[e.name]) {
-        loadWeatherLayer(e.name);
+    if (weatherLayerManager.layers[e.name]) {
+        weatherLayerManager.loadLayer(e.name);
     }
 });
 
-// Initialize other layers (stations, boundaries, etc.)
-function initializeBaseFeatures() {
-    // Add your existing markers, boundaries, etc. here
-    // Keep your existing code for stations and boundaries
-}
+// Initialize coordinates display
+map.on('mousemove', (e) => {
+    document.querySelector('.coordinate-display').textContent = 
+        `Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`;
+});
 
-// Initialize map
-initializeBaseFeatures();
+// Add coordinates display control
+L.control({position: 'bottomright'}).onAdd = () => {
+    const div = L.DomUtil.create('div', 'coordinate-display');
+    div.style.backgroundColor = 'white';
+    div.style.padding = '5px';
+    return div;
+}.addTo(map);
