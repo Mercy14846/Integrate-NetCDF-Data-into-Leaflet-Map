@@ -35,59 +35,47 @@ mkdir -p ~/climate_data
 # Copy your .nc files to this directory
 ```
 Configuration
-Edit 'app.py' if needed:
+Edit `app.py` if needed:
 
-python
+```python
 DATA_DIR = '/path/to/your/netcdf/files'  # Line 14
+```
 Supported variables (add corresponding .nc files):
+- temperature.nc
+- pressure.nc
+- wind_speed.nc
+- precipitation.nc
 
-temperature.nc
-
-pressure.nc
-
-wind_speed.nc
-
-precipitation.nc
-
-Running the Application
+# Running the Application
 Start Flask backend:
-
-bash
+```bash
 python app.py
-Open frontend in browser:
-
+```
+Open the frontend in the browser:
+```
 http://localhost:5000
-Usage
-Layer Controls (top-right):
+```
+# Usage
+1. Layer Controls (top-right):
+- Toggle between map base layers
+- Enable/disable weather overlays and boundaries
 
-Toggle between map base layers
+2. Time Control (bottom-left):
+- Drag slider to navigate temporal data
+- Displays current time index
 
-Enable/disable weather overlays and boundaries
+3. Interactive Features:
+- Click countries to zoom
+- Hover for coordinates
+- Click markers for station info
 
-Time Control (bottom-left):
+# Troubleshooting
+- Ensure NetCDF files are named correctly (e.g., temperature.nc)
+- Check Flask server is running on port 5000
+- Verify file permissions in your data directory
+- Use browser developer tools for error inspection
 
-Drag slider to navigate temporal data
-
-Displays current time index
-
-Interactive Features:
-
-Click countries to zoom
-
-Hover for coordinates
-
-Click markers for station info
-
-Troubleshooting
-Ensure NetCDF files are named correctly (e.g., temperature.nc)
-
-Check Flask server is running on port 5000
-
-Verify file permissions in your data directory
-
-Use browser developer tools for error inspection
-
-License
+- License
 MIT License - see LICENSE file
 
 Note: Add your NetCDF files to the specified directory before running. Supported variables will automatically appear in layer controls.
