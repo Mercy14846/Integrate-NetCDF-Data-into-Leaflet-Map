@@ -26,15 +26,16 @@ git clone https://github.com/yourusername/climate-map.git
 cd climate-map
 ```
 Install Python dependencies:
-bash
+```bash
 pip install flask netCDF4 numpy pillow matplotlib flask-cors
+```
 Place NetCDF files in ~/climate_data (default) or your preferred directory:
-
-bash
+```bash
 mkdir -p ~/climate_data
 # Copy your .nc files to this directory
+```
 Configuration
-Edit app.py if needed:
+Edit 'app.py' if needed:
 
 python
 DATA_DIR = '/path/to/your/netcdf/files'  # Line 14
