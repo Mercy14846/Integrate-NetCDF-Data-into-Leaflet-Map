@@ -24,8 +24,8 @@ A web-based mapping interface for visualizing climate data from NetCDF files com
 ```bash
 git clone https://github.com/yourusername/climate-map.git
 cd climate-map
+```
 Install Python dependencies:
-
 bash
 pip install flask netCDF4 numpy pillow matplotlib flask-cors
 Place NetCDF files in ~/climate_data (default) or your preferred directory:
