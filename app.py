@@ -13,6 +13,8 @@ CORS(app)
 # Configuration
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')  # Relative to app.py
 
+data = ds[variable][time_idx, :, :]  # Expects [time, lat, lon] dimensions
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -30,8 +32,10 @@ def get_weather_layer():
             return jsonify({"error": f"File {nc_file} not found in {DATA_DIR}"}), 404
 
         with Dataset(nc_path) as ds:
-            # Assuming dimensions are [time, lat, lon]
-            data = ds[variable][time_idx, :, :]
+            print(f"Variable dimensions: {ds[variable].dimensions}")
+            print(f"Time dimension length: {len(ds['time'])}")
+            print(f"Lat range: {ds['lat'][:].min()} to {ds['lat'][:].max()}")
+            print(f"Lon range: {ds['lon'][:].min()} to {ds['lon'][:].max()}")
             
             # Normalize and colorize
             norm_data = ((data - np.nanmin(data)) / 
