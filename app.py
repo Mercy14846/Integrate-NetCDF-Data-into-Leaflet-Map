@@ -36,7 +36,11 @@ def get_weather_layer():
             print(f"Time dimension length: {len(ds['time'])}")
             print(f"Lat range: {ds['lat'][:].min()} to {ds['lat'][:].max()}")
             print(f"Lon range: {ds['lon'][:].min()} to {ds['lon'][:].max()}")
-            
+
+        with Dataset(nc_path) as ds:
+            data = ds[variable][time_idx, :, :]
+            print(f"Data min: {np.nanmin(data)}, max: {np.nanmax(data)}")
+              
             # Normalize and colorize
             norm_data = ((data - np.nanmin(data)) / 
                        (np.nanmax(data) - np.nanmin(data)) * 255).astype(np.uint8)
