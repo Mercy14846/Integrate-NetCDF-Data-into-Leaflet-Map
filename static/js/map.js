@@ -1,18 +1,18 @@
 // Initialize map
-const map = L.map('map').setView([0, 20], 3);
+function initializeMap() {
+    try {
+        const map = L.map('map').setView([0, 20], 3);
+        
+        // Base layers
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-// Base layers
-const baseLayers = {
-    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map),
-    
-    "Google Satellite": L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: '© Google'
-    })
-};
+        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            attribution: '© Google'
+        });
 
 // Weather layer manager
 const weatherLayerManager = {
@@ -77,9 +77,27 @@ const weatherLayerManager = {
 };
 
 // Layer control
-L.control.layers(baseLayers, {}, {
-    collapsed: false
+const layerControl = L.control.layers({
+    "OpenStreetMap": osmLayer,
+    "Google Satellite": googleSatellite
 }).addTo(map);
+
+return map;
+} catch (error) {
+console.error('Map initialization failed:', error);
+document.getElementById('map').innerHTML = 
+    '<h2>Error loading map. Please try refreshing the page.</h2>';
+}
+}
+
+// Initialize map first
+const map = initializeMap();
+
+// Then initialize other components
+if (map) {
+// Add your weather layer controls and other logic here
+// Keep the rest of your code that depends on the map
+}
 
 // Handle layer changes
 map.on('baselayerchange', (e) => {
