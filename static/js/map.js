@@ -1,20 +1,17 @@
-// Initialize map
-function initializeMap() {
-    try {
-        const map = L.map('map').setView([0, 20], 3);
-        
-        // Base layers
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+// Initialize map first
+const map = L.map('map').setView([0, 20], 3);
 
-        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            attribution: '© Google'
-        });
+// Initialize coordinate display
+const coordDisplay = L.control({position: 'bottomright'});
+coordDisplay.onAdd = () => {
+    const div = L.DomUtil.create('div', 'coordinate-display');
+    div.style.backgroundColor = 'white';
+    div.style.padding = '5px';
+    return div;
+};
+coordDisplay.addTo(map);
 
-// Weather layer manager
+// Weather Layer Manager (define this BEFORE layer control)
 const weatherLayerManager = {
     currentLayer: null,
     currentVar: null,
@@ -25,33 +22,27 @@ const weatherLayerManager = {
     },
 
     async loadLayer(name) {
-        if (this.currentLayer) {
-            map.removeLayer(this.currentLayer);
-        }
-
+        if (this.currentLayer) map.removeLayer(this.currentLayer);
+        
         const config = this.layers[name];
-        const response = await fetch(`/time-steps?var=${config.var}`);
-        
-        if (!response.ok) {
-            console.error('Failed to load time steps:', await response.text());
-            return;
+        try {
+            const response = await fetch(`/time-steps?var=${config.var}`);
+            const timeData = await response.json();
+            this.createTimeControl(timeData.times.length);
+            
+            this.currentLayer = L.imageOverlay(
+                `/weather-layer?var=${config.var}&time=0`,
+                config.bounds,
+                { var: config.var }
+            ).addTo(map);
+            this.currentVar = config.var;
+        } catch (error) {
+            console.error('Error loading layer:', error);
         }
-
-        const timeData = await response.json();
-        this.createTimeControl(timeData.times.length);
-        
-        this.currentLayer = L.imageOverlay(
-            `/weather-layer?var=${config.var}&time=0`,
-            config.bounds,
-            { var: config.var }
-        ).addTo(map);
-        
-        this.currentVar = config.var;
     },
 
     createTimeControl(maxTime) {
         let control = document.querySelector('.leaflet-control-time');
-        
         if (!control) {
             control = L.control({ position: 'bottomleft' });
             control.onAdd = () => {
@@ -65,57 +56,38 @@ const weatherLayerManager = {
             };
             control.addTo(map);
         }
-
         document.querySelector('.time-slider').addEventListener('input', (e) => {
             const timeIdx = e.target.value;
             document.querySelector('.time-display').textContent = `Time Index: ${timeIdx}`;
-            this.currentLayer.setUrl(
-                `/weather-layer?var=${this.currentVar}&time=${timeIdx}`
-            );
+            this.currentLayer.setUrl(`/weather-layer?var=${this.currentVar}&time=${timeIdx}`);
         });
     }
 };
 
-// Layer control
-const layerControl = L.control.layers({
-    "OpenStreetMap": osmLayer,
-    "Google Satellite": googleSatellite
-}).addTo(map);
+// Initialize base layers
+const baseLayers = {
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map),
+    
+    "Google Satellite": L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google'
+    })
+};
 
-return map;
-} catch (error) {
-console.error('Map initialization failed:', error);
-document.getElementById('map').innerHTML = 
-    '<h2>Error loading map. Please try refreshing the page.</h2>';
-}
-}
+// Initialize layer control AFTER defining weatherLayerManager
+L.control.layers(baseLayers, {}, { collapsed: false }).addTo(map);
 
-// Initialize map first
-const map = initializeMap();
-
-// Then initialize other components
-if (map) {
-// Add your weather layer controls and other logic here
-// Keep the rest of your code that depends on the map
-}
-
-// Handle layer changes
+// Event handlers AFTER all definitions
 map.on('baselayerchange', (e) => {
     if (weatherLayerManager.layers[e.name]) {
         weatherLayerManager.loadLayer(e.name);
     }
 });
 
-// Initialize coordinates display
 map.on('mousemove', (e) => {
     document.querySelector('.coordinate-display').textContent = 
         `Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`;
 });
-
-// Add coordinates display control
-L.control({position: 'bottomright'}).onAdd = () => {
-    const div = L.DomUtil.create('div', 'coordinate-display');
-    div.style.backgroundColor = 'white';
-    div.style.padding = '5px';
-    return div;
-}
