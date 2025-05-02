@@ -118,4 +118,4 @@ L.control({position: 'bottomright'}).onAdd = () => {
     div.style.backgroundColor = 'white';
     div.style.padding = '5px';
     return div;
-}.addTo(map);
+}
