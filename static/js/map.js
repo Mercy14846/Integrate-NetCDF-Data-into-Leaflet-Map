@@ -91,3 +91,8 @@ map.on('mousemove', (e) => {
     document.querySelector('.coordinate-display').textContent = 
         `Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`;
 });
+
+weatherLayerManager.loadLayer('Temperature').then(() => {
+    console.log('Layer bounds:', weatherLayerManager.currentLayer.getBounds());
+    map.fitBounds(weatherLayerManager.currentLayer.getBounds());
+});
