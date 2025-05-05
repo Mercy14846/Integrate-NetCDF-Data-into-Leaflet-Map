@@ -2,7 +2,7 @@
 const map = L.map('map').setView([0, 20], 3);
 
 // Initialize coordinate display
-const coordDisplay = L.control({position: 'bottomright'});
+const coordDisplay = L.control({position: 'bottomcentre'});
 coordDisplay.onAdd = () => {
     const div = L.DomUtil.create('div', 'coordinate-display');
     div.style.backgroundColor = 'white';
