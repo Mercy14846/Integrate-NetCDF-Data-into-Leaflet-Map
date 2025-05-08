@@ -13,7 +13,7 @@ CORS(app)
 # Configuration
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')  # Relative to app.py
 
-# data = ds[variable][time_idx, :, :]  # Expects [time, lat, lon] dimensions
+# data = ds[variable][time_idx, :, :]  # Expects [time, lat, lon] 3D dimensions
 
 @app.route('/')
 def home():
