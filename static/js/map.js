@@ -11,7 +11,7 @@ coordDisplay.onAdd = () => {
 };
 coordDisplay.addTo(map);
 
-// Weather Layer Manager (define this BEFORE layer control)
+// Weather Layer Manager 
 const weatherLayerManager = {
     currentLayer: null,
     currentVar: null,
