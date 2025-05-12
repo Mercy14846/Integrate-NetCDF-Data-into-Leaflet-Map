@@ -17,8 +17,8 @@ const weatherLayerManager = {
     currentVar: null,
     
     layers: {
-        "Temperature": { var: 'temperature', bounds: [[-35, -20], [37, 50]] },
-        "Pressure": { var: 'pressure', bounds: [[-35, -20], [37, 50]] }
+        "Temperature": { var: 'temp_2m', bounds: [[-35, -20], [37, 50]] },
+        // "Pressure": { var: 'pressure', bounds: [[-35, -20], [37, 50]] }
     },
 
     async loadLayer(name) {

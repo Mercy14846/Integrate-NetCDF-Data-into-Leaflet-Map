@@ -21,52 +21,56 @@ def home():
 
 @app.route('/weather-layer')
 def get_weather_layer():
-    try:
-        variable = request.args.get('var')
-        time_idx = int(request.args.get('time', 0))
-        
-        nc_file = f"{variable}.nc"
-        nc_path = os.path.join(DATA_DIR, nc_file)
-        
-        if not os.path.exists(nc_path):
-            return jsonify({"error": f"File {nc_file} not found in {DATA_DIR}"}), 404
+    # try:
+    variable = request.args.get('var')
+    time_idx = int(request.args.get('time', 0))
+    
+    nc_file = "temp_2m.nc"
+    nc_path = os.path.join(DATA_DIR, nc_file)
+    print(nc_path)
+    if not os.path.exists(nc_path):
+        return jsonify({"error": f"File {nc_file} not found in {DATA_DIR}"}), 404
 
-        with Dataset(nc_path) as ds:
-            print(f"Variable dimensions: {ds[variable].dimensions}")
-            print(f"Time dimension length: {len(ds['time'])}")
-            print(f"Lat range: {ds['lat'][:].min()} to {ds['lat'][:].max()}")
-            print(f"Lon range: {ds['lon'][:].min()} to {ds['lon'][:].max()}")
+    dataset = Dataset(nc_path, mode='r')
+    print(f"Variable dimensions: {dataset[variable].dimensions}")
 
-        with Dataset(nc_path) as ds:
-            data = ds[variable][time_idx, :, :]
-            print(f"Data min: {np.nanmin(data)}, max: {np.nanmax(data)}")
+    with Dataset(nc_path, ) as ds:
+        print(ds.variables.keys())
+        print(f"Variable dimensions: {ds[variable].dimensions}")
+        print(f"Time dimension length: {len(ds['time'])}")
+        print(f"Lat range: {ds['lat'][:].min()} to {ds['lat'][:].max()}")
+        print(f"Lon range: {ds['lon'][:].min()} to {ds['lon'][:].max()}")
 
-            # Normalize and colorize
-            norm_data = ((data - np.nanmin(data)) / 
-                       (np.nanmax(data) - np.nanmin(data)) * 255).astype(np.uint8)
-            cmap = plt.cm.get_cmap('viridis')
-            colored_data = (cmap(norm_data / 255.0)[:, :, :3] * 255).astype(np.uint8)
+    with Dataset(nc_path) as ds:
+        data = ds[variable][time_idx, :, :]
+        print(f"Data min: {np.nanmin(data)}, max: {np.nanmax(data)}")
 
-            # Convert to PNG
-            img = Image.fromarray(colored_data)
-            img_io = BytesIO()
-            img.save(img_io, 'PNG')
-            img_io.seek(0)
+        # Normalize and colorize
+        norm_data = ((data - np.nanmin(data)) / 
+                    (np.nanmax(data) - np.nanmin(data)) * 255).astype(np.uint8)
+        cmap = plt.cm.get_cmap('viridis')
+        colored_data = (cmap(norm_data / 255.0)[:, :, :3] * 255).astype(np.uint8)
 
-        return send_file(img_io, mimetype='image/png')
+        # Convert to PNG
+        img = Image.fromarray(colored_data)
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
 
-    except Exception as e:
-        return jsonify({
-            "error": str(e),
-            "path": nc_path,
-            "available_files": os.listdir(DATA_DIR)
-        }), 500
+    return send_file(img_io, mimetype='image/png')
+
+    # except Exception as e:
+    #     return jsonify({
+    #         "error": str(e),
+    #         "path": nc_path,
+    #         "available_files": os.listdir(DATA_DIR)
+    #     }), 500
 
 @app.route('/time-steps')
 def get_time_steps():
     try:
         variable = request.args.get('var')
-        nc_path = os.path.join(DATA_DIR, f'{variable}.nc')
+        nc_path = os.path.join(DATA_DIR, 'temperature.nc')
         
         if not os.path.exists(nc_path):
             return jsonify({"error": "File not found"}), 404
